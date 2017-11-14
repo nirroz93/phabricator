@@ -1393,7 +1393,7 @@ final class PhabricatorHebrewTranslation
       ),
 
       '%s Day(s)' => array(
-        '%s Day',
+        '%s DayHeb', 
         '%s Days',
       ),
       '%s Day(s) Ago' => array(
