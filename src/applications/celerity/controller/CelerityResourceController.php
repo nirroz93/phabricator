@@ -24,6 +24,10 @@ abstract class CelerityResourceController extends PhabricatorController {
 
   abstract public function getCelerityResourceMap();
 
+   /**
+    * @phutil-external-symbol class CSSJanus
+    */
+
   protected function serveResource(array $spec) {
     $path = $spec['path'];
     $hash = idx($spec, 'hash');
@@ -107,6 +111,16 @@ abstract class CelerityResourceController extends PhabricatorController {
       ->setMimeType($type_map[$type]);
 
     $range = AphrontRequest::getHTTPHeader('Range');
+    $isLocaleRTL = PhabricatorEnv::isRTLLocale();
+      if ($isLocaleRTL) {
+        #Flip Left Right:
+        if ($type === 'css') {
+            $root = dirname(phutil_get_library_root('phabricator'));
+            require_once $root.'/externals/cssJanus/src/CSSJanus.php';
+            $data = CSSJanus::transform($data, true, false);
+            #data = 0;
+        }
+      }
 
     if (strlen($range)) {
       $response->setContentLength(strlen($data));
@@ -120,7 +134,6 @@ abstract class CelerityResourceController extends PhabricatorController {
           $data = substr($data, $range_begin);
         }
       }
-
       $response->setContentIterator(array($data));
     } else {
       $response

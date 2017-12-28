@@ -56,6 +56,7 @@ final class PhabricatorEnv extends Phobject {
   private static $requestBaseURI;
   private static $cache;
   private static $localeCode;
+  private static $isRTLlocale;
   private static $readOnly;
   private static $readOnlyReason;
 
@@ -145,6 +146,10 @@ final class PhabricatorEnv extends Phobject {
     return self::$localeCode;
   }
 
+  public static function isRTLLocale() {
+    return self::$isRTLlocale;
+  }
+
   public static function setLocaleCode($locale_code) {
     if (!$locale_code) {
       return;
@@ -169,6 +174,7 @@ final class PhabricatorEnv extends Phobject {
         ->setTranslations($override + $translations);
 
       self::$localeCode = $locale_code;
+      self::$isRTLlocale = $locale->isRTLLocale();
     } catch (Exception $ex) {
       // Just ignore this; the user likely has an out-of-date locale code.
     }

@@ -1,0 +1,5 @@
+/clover.xml
+/composer.lock
+/coverage
+/test/data-v*.json
+/vendor
