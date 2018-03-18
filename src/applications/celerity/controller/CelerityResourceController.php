@@ -110,6 +110,11 @@ abstract class CelerityResourceController extends PhabricatorController {
     $response = id(new AphrontFileResponse())
       ->setMimeType($type_map[$type]);
 
+    // The "Content-Security-Policy" header has no effect on the actual
+    // resources, only on the main request. Disable it on the resource
+    // responses to limit confusion.
+    $response->setDisableContentSecurityPolicy(true);
+
     $range = AphrontRequest::getHTTPHeader('Range');
     $isLocaleRTL = PhabricatorEnv::isRTLLocale();
       if ($isLocaleRTL) {

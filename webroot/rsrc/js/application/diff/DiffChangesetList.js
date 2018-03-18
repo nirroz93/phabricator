@@ -128,6 +128,9 @@ JX.install('DiffChangesetList', {
       this._redrawFocus();
       this._redrawSelection();
       this.resetHover();
+
+      this._bannerChangeset = null;
+      this._redrawBanner();
     },
 
     wake: function() {
@@ -135,6 +138,9 @@ JX.install('DiffChangesetList', {
 
       this._redrawFocus();
       this._redrawSelection();
+
+      this._bannerChangeset = null;
+      this._redrawBanner();
 
       if (this._initialized) {
         return;
@@ -465,7 +471,7 @@ JX.install('DiffChangesetList', {
       new JX.Notification()
         .setContent(message)
         .alterClassName('jx-notification-alert', true)
-        .setDuration(1000)
+        .setDuration(3000)
         .show();
     },
 
@@ -691,6 +697,7 @@ JX.install('DiffChangesetList', {
         'div',
         'differential-changeset');
 
+      var changeset_list = this;
       var changeset = this.getChangesetForNode(node);
 
       var menu = new JX.PHUIXDropdownMenu(button);
@@ -738,6 +745,22 @@ JX.install('DiffChangesetList', {
       var up_item = new JX.PHUIXActionView()
         .setHandler(function(e) {
           if (changeset.isLoaded()) {
+
+            // Don't let the user swap display modes if a comment is being
+            // edited, since they might lose their work. See PHI180.
+            var inlines = changeset.getInlines();
+            for (var ii = 0; ii < inlines.length; ii++) {
+              if (inlines[ii].isEditing()) {
+                changeset_list._warnUser(
+                  pht(
+                    'Finish editing inline comments before changing display ' +
+                    'modes.'));
+                e.prevent();
+                menu.close();
+                return;
+              }
+            }
+
             var renderer = changeset.getRenderer();
             if (renderer == '1up') {
               renderer = '2up';
@@ -898,6 +921,11 @@ JX.install('DiffChangesetList', {
       this._bannerChangeset = null;
 
       this._redrawBanner();
+
+      var changesets = this._changesets;
+      for (var ii = 0; ii < changesets.length; ii++) {
+        changesets[ii].redrawFileTree();
+      }
     },
 
     _onscroll: function() {
@@ -1352,17 +1380,17 @@ JX.install('DiffChangesetList', {
       var node = this._getBannerNode();
       var changeset = this._getVisibleChangeset();
 
+      if (!changeset) {
+        JX.DOM.remove(node);
+        return;
+      }
+
       // Don't do anything if nothing has changed. This seems to avoid some
       // flickering issues in Safari, at least.
       if (this._bannerChangeset === changeset) {
         return;
       }
       this._bannerChangeset = changeset;
-
-      if (!changeset) {
-        JX.DOM.remove(node);
-        return;
-      }
 
       var inlines = this._getInlinesByType();
 
